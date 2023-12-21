@@ -18,16 +18,15 @@ namespace PISIAssessment.Controllers
     
     {
         private readonly ISubService _subService;
-
-        
+   
     public ServiceControler(ISubService subService)
     {
         _subService = subService;
     }
     [HttpPost("checkstatus"),Authorize]
-    public async Task<IActionResult> CheckStatusAsync(RequestDto request)
+    public async Task<IActionResult> CheckStatusAsync(int serviceId, string phone)
     {
-            var status = await _subService.CheckStatus(request);
+            var status = await _subService.CheckStatus(serviceId, phone);
         
             return Ok(status);
        
@@ -35,25 +34,38 @@ namespace PISIAssessment.Controllers
     [HttpPost("subscribe"),Authorize]
     public async Task<IActionResult> SubscribeAsync(RequestDto request)
     {
-        
-        if (await _subService.SubscribeUserAsync(request))
-            {
-                return Ok(new { Message = "Subscribed successfully" });
-            }
+        var clean = new Subscriber();
+         var result = await _subService.SubscribeUserAsync( clean, request.ServiceId, request.Phone );
 
-            return BadRequest(new { Message = "User is already subscribed" });
+        if (result)
+        {
+            return Ok("Subscription successful");
+        }
+        else
+        {
+            return BadRequest("Failed to subscribe user");
+        }
+
         }
     
          [HttpPost("unsubscribe"),Authorize]
-        public async Task<IActionResult> UnsubscribeAsync(RequestDto request)
+        public async Task<IActionResult> UnsubscribeAsync(int serviceId, string phone)
         {
-            await _subService.UnsubscribeUserAsync(request);
-            return Ok(new { Message = "Unsubscribed successfully" });
+            
+            var result = await _subService.UnsubscribeUserAsync(serviceId, phone);
+
+        if (result)
+        {
+            return Ok("Unsubscribed successful");
         }
+        else
+        {
+            return BadRequest("Failed to unsubscribe user");
+        }
+
+        }
+        
     }
-
-
-    
 
 }
     

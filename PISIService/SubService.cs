@@ -19,29 +19,25 @@ namespace PISIAssessment.PISIService
             _context = context;
         }
 
-        public async Task<bool> SubscribeUserAsync(RequestDto request)
+        public async Task<bool> SubscribeUserAsync(Subscriber request, int serviceId, string phone)
     {
         try
         {
             
             var existingSubscription = await _context.Subscribers
-                .FirstOrDefaultAsync(s => s.ServiceId == request.ServiceId && s.Phone == request.Phone);
+                .FirstOrDefaultAsync(s => s.ServiceId == serviceId && s.Phone == phone);
 
-            if (string.IsNullOrEmpty(request.Phone) || string.IsNullOrEmpty(request.Token))
+            // if (string.IsNullOrEmpty(request.Phone) || string.IsNullOrEmpty(request.Token))
+            // {
+            //     return false; 
+            // }
+
+            if( existingSubscription != null)
             {
-                return false; 
+                return false;
             }
-
             
-            var newSubscription = new Subscriber
-            {
-                ServiceId = request.ServiceId,
-                Token = request.Token,
-                Phone = request.Phone,
-                SubscriptionDate = DateTime.UtcNow
-            };
-
-            _context.Subscribers.Add(newSubscription);
+            _context.Subscribers.Add(request);
             await _context.SaveChangesAsync();
 
             return true; 
@@ -66,35 +62,36 @@ namespace PISIAssessment.PISIService
         return false;
     }
 
-       public async Task UnsubscribeUserAsync(RequestDto request)
+       public async Task<bool>  UnsubscribeUserAsync( int serviceId, string phone)
     {
         try
         {
             // Find the subscription record
-            var subscription = await _context.Subscribers
-                .FirstOrDefaultAsync(s => s.ServiceId == request.ServiceId && s.Phone == request.Phone);
+             var subscriber = await _context.Subscribers
+            .FirstOrDefaultAsync(s => s.ServiceId == serviceId && s.Phone == phone);
 
-            if (subscription != null)
+            if (subscriber != null)
             {
                 
-                subscription.UnsubscriptionDate = DateTime.UtcNow;
+                subscriber.UnsubscriptionDate = DateTime.UtcNow;
 
                 
                 await _context.SaveChangesAsync();
+                return true;
             }
-            
+            return false;
         }
         catch (Exception)
         {
-            
+            return false;
         }
       } 
         
-         public async Task<object> CheckStatus(RequestDto request)
+         public async Task<object> CheckStatus( int serviceId, string phone)
         {
             
              var subscriber = await _context.Subscribers
-            .FirstOrDefaultAsync(s => s.ServiceId == request.ServiceId && s.Phone == request.Phone);
+            .FirstOrDefaultAsync(s => s.ServiceId == serviceId && s.Phone == phone);
 
         if (subscriber != null)
         {
